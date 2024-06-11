@@ -1,0 +1,8 @@
+server:
+  port: 8080
+
+app:
+  base-url: https://api.vk.com/
+  group_id: ${GROUP_ID}
+  access_token: ${ACCESS_TOKEN}
+  interval: 5
