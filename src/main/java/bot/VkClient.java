@@ -66,7 +66,7 @@ public class VkClient {
 
     /**
      * @return json array of tracked events
-     * More about format: https://dev.vk.com/ru/api/community-events/json-schema
+     * More about format: <a href="https://dev.vk.com/ru/api/community-events/json-schema"></a>
      */
     public JsonNode getUpdates() throws IOException {
         if (updatesClient == null) {

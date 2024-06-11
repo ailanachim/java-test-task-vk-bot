@@ -8,7 +8,7 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class AppConfig {
 
-    @Value("${app.base-url}")
+    @Value("${app.base_url}")
     private String baseUrl;
     @Value("${app.group_id}")
     private int groupId;
