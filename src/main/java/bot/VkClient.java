@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class VkClient {
 
@@ -30,19 +32,18 @@ public class VkClient {
     /**
      * Sends message to VK user
      *
-     * @param message message text. The maximum number of characters is 4096.
-     * @param userId the ID of the user to whom the message is sent.
+     * @param message  message text. The maximum number of characters is 4096.
+     * @param userId   the ID of the user to whom the message is sent.
      * @param randomId A unique (in relation to the application ID and sender ID) identifier
      *                 designed to prevent repeated sending of the same message.
      *                 Saved with the message and available in the message history.
      *                 Possible values:
-     *                      0 — uniqueness check is not needed.
-     *                      Any other number within int32 - a check for uniqueness is needed.
+     *                 0 — uniqueness check is not needed.
+     *                 Any other number within int32 - a check for uniqueness is needed.
      *                 The random_id sent in the request is used to check the uniqueness of messages
      *                 in a given conversation over the last hour (but not more than the last 100 messages).
-     * @return message ID
      */
-    public int sendMessage(String message, int userId, int randomId) throws IOException {
+    public void sendMessage(String message, int userId, int randomId) throws IOException {
         String method = "messages.send";
         ResponseEntity<String> response = client.get()
                 .uri(uriBuilder -> uriBuilder
@@ -61,14 +62,12 @@ public class VkClient {
         if (json.get("error") != null) {
             throw new IOException(json.get("error").asText());
         }
-        return json.get("response").asInt();
     }
 
     /**
-     * @return json array of tracked events
-     * More about format: <a href="https://dev.vk.com/ru/api/community-events/json-schema"></a>
+     * @return list of messages received by the bot
      */
-    public JsonNode getUpdates() throws IOException {
+    public List<Message> getMessages() throws IOException {
         if (updatesClient == null) {
             getLongPollServer();
         }
@@ -89,10 +88,20 @@ public class VkClient {
         }
         if (json.get("failed") != null) {
             getLongPollServer();
-            return getUpdates();
+            return getMessages();
         }
         ts = json.get("ts").asText();
-        return json.get("updates");
+        var updates = json.get("updates");
+        List<Message> messages = new ArrayList<>();
+        for (JsonNode update : updates) {
+            if (update.get("type").asText().equals("message_new")) {
+                var jsonMessage = update.get("object").get("message");
+                int userId = jsonMessage.get("from_id").asInt();
+                String text = jsonMessage.get("text").asText();
+                messages.add(new Message(text, userId));
+            }
+        }
+        return messages;
     }
 
     private void getLongPollServer() throws IOException {
